@@ -82,19 +82,37 @@ func (f *Files) Reverse(filename string) {
 	}
 }
 
-func (f *Files) getCurrentLine(filename string) string {
-	if _, ok := f.TextFiles[filename]; !ok {
-		return ""
-	}
-	line := f.TextFiles[filename].Rows[f.TextFiles[filename].pointer]
-	f.incrementPointer(filename)
-	return line
+/********************************************************
+** PRIVATE FUNCTIONS
+********************************************************/
+
+func (f *Files) initializeLock() {
+	f.lock = &sync.Mutex{}
 }
 
-func (f *Files) newTextFile(filename string) *textFile {
-	return &textFile{
-		pointer: f.getPointerFromIni(filename),
+func (f *Files) doesIniExist() bool {
+	_, err := os.Stat(f.path)
+	if os.IsNotExist(err) {
+		return false
 	}
+	return true
+}
+
+func (f *Files) createEmptyIniFile() {
+	emptyFile, err := os.Create(f.path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	emptyFile.Close()
+}
+
+func (f *Files) loadIniFile() {
+	cfg, err := ini.Load(f.path)
+	if err != nil {
+		fmt.Printf("Fail to read file: %v", err)
+		os.Exit(1)
+	}
+	f.ini = cfg
 }
 
 func (f *Files) putAllFilesInStorage(path string) error {
@@ -120,7 +138,6 @@ func (f *Files) putAllFilesInStorage(path string) error {
 	}
 
 	return nil
-
 }
 
 func (f *Files) putTextFileLinesInStorage(path, filename string) {
@@ -145,14 +162,26 @@ func (f *Files) putTextFileLinesInStorage(path, filename string) {
 	}
 }
 
+func (f *Files) getCurrentLine(filename string) string {
+	if _, ok := f.TextFiles[filename]; !ok {
+		return ""
+	}
+	line := f.TextFiles[filename].Rows[f.TextFiles[filename].pointer]
+	f.incrementPointer(filename)
+	return line
+}
+
+func (f *Files) newTextFile(filename string) *textFile {
+	return &textFile{
+		pointer: f.getPointerFromIni(filename),
+	}
+}
+
 func (f *Files) incrementPointer(filename string) {
 	f.TextFiles[filename].pointer++
 	if f.TextFiles[filename].pointer >= len(f.TextFiles[filename].Rows) {
 		f.TextFiles[filename].pointer = 0
 	}
-
-	fmt.Printf("%s - pointer: %v -- rows: %v\n\n", filename, f.TextFiles[filename].pointer, len(f.TextFiles[filename].Rows))
-
 	f.storePointer(filename)
 }
 
@@ -174,35 +203,6 @@ func (f *Files) getPointerFromIni(filename string) int {
 	}
 
 	return int(p)
-}
-
-func (f *Files) initializeLock() {
-	f.lock = &sync.Mutex{}
-}
-
-func (f *Files) createEmptyIniFile() {
-	emptyFile, err := os.Create(f.path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	emptyFile.Close()
-}
-
-func (f *Files) doesIniExist() bool {
-	_, err := os.Stat(f.path)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
-func (f *Files) loadIniFile() {
-	cfg, err := ini.Load(f.path)
-	if err != nil {
-		fmt.Printf("Fail to read file: %v", err)
-		os.Exit(1)
-	}
-	f.ini = cfg
 }
 
 func isTextFile(filename string) bool {
