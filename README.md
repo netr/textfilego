@@ -1,10 +1,10 @@
 ## TextFileGo
 
-Text File Line by Line Rotation Library with INI State Management
+Text File Line by Line Rotation Package with INI State Management
 
 ---
 
-Easy to use library to rotate through lines in a text files. You can pick up wherever you left off using INI files to store the line number pointer. Must use \*.txt files for now. No tests as of now. Can expand it/clean it up if anyone wants me to.
+Easy to use library to rotate through lines in text files. You can pick up wherever you left off using INI files to store the line number pointer. Must use \*.txt files for now. No tests yet. Can expand it/clean it up if anyone wants me to.
 
 Works by loading all files in a directory into a struct.
 
