@@ -50,11 +50,11 @@ func (f *Files) Init(path string) error {
 }
 
 // Next returns the next item in the text file mapping
-func (f *Files) Next(filename string) string {
+func (f *Files) Next(filename string, roundRobin bool) string {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	row := f.getCurrentLine(filename)
+	row := f.getCurrentLine(filename, roundRobin)
 	return row
 }
 
@@ -162,12 +162,17 @@ func (f *Files) putTextFileLinesInStorage(path, filename string) {
 	}
 }
 
-func (f *Files) getCurrentLine(filename string) string {
+func (f *Files) getCurrentLine(filename string, roundRobin bool) string {
 	if _, ok := f.TextFiles[filename]; !ok {
 		return ""
 	}
+
+	if !roundRobin && f.isTextFileFinished(filename) {
+		return ""
+	}
+
 	line := f.TextFiles[filename].Rows[f.TextFiles[filename].pointer]
-	f.incrementPointer(filename)
+	f.incrementPointer(filename, roundRobin)
 	return line
 }
 
@@ -177,11 +182,18 @@ func (f *Files) newTextFile(filename string) *textFile {
 	}
 }
 
-func (f *Files) incrementPointer(filename string) {
+func (f *Files) isTextFileFinished(filename string) bool {
+	return f.TextFiles[filename].pointer >= len(f.TextFiles[filename].Rows)
+}
+
+func (f *Files) incrementPointer(filename string, roundRobin bool) {
 	f.TextFiles[filename].pointer++
 	if f.TextFiles[filename].pointer >= len(f.TextFiles[filename].Rows) {
-		f.TextFiles[filename].pointer = 0
+		if roundRobin {
+			f.TextFiles[filename].pointer = 0
+		}
 	}
+
 	f.storePointer(filename)
 }
 

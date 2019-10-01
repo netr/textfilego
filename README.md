@@ -20,5 +20,10 @@ if err != nil {
 }
 
 // will get next line for /my-text-files/filename.txt
-fmt.Printf("test: %s\n", txts.Next("filename"))
+//  params for the Next function are (filename, roundRobin)
+
+//  if you don't want it to round robin, the result will return an empty string
+//  you can use this to know it's finished
+
+fmt.Printf("displaying line from filename: %s\n", txts.Next("filename", false))
 ```
