@@ -1,6 +1,6 @@
 ## TextFileGo
 
-Text File Line by Line Rotation Package with INI State Management
+Thread Safe Text File Line by Line Rotation Package with INI State Management
 
 ---
 
