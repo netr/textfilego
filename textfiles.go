@@ -15,7 +15,7 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-// Files contains all files in the files directory with their rows and pointers
+// Files holds the data for maintaining text files and state
 type Files struct {
 	ini       *ini.File
 	TextFiles map[string]*textFile
@@ -28,7 +28,9 @@ type textFile struct {
 	pointer int
 }
 
-// Init must be called to load your ini file
+// Init accepts the directory of your text files
+// loads all the text files into structs
+// gets the pointers from the ini file
 func (f *Files) Init(path string) error {
 
 	f.path = "textfiles.ini"
@@ -49,7 +51,7 @@ func (f *Files) Init(path string) error {
 	return nil
 }
 
-// Next returns the next item in the text file mapping
+// Next gets the current line from the text file
 func (f *Files) Next(filename string, roundRobin bool) string {
 	f.lock.Lock()
 	defer f.lock.Unlock()
@@ -58,7 +60,7 @@ func (f *Files) Next(filename string, roundRobin bool) string {
 	return row
 }
 
-// Count returns the total number of lines in the text file
+// Count returns the total number of lines in the text file struct
 func (f *Files) Count(filename string) int {
 	if _, ok := f.TextFiles[filename]; !ok {
 		return 0
@@ -66,7 +68,21 @@ func (f *Files) Count(filename string) int {
 	return len(f.TextFiles[filename].Rows)
 }
 
-// Shuffle rows in specific file
+// ResetPointer sets the pointer back to zero for a filename
+func (f *Files) ResetPointer(filename string) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
+	if _, ok := f.TextFiles[filename]; !ok {
+		return
+	}
+
+	f.TextFiles[filename].pointer = 0
+	f.storePointer(filename)
+	return
+}
+
+// Shuffle rows of a specified text file
 func (f *Files) Shuffle(filename string) {
 	for i := len(f.TextFiles[filename].Rows) - 1; i > 0; i-- {
 		j := rand.Intn(i + 1)
@@ -74,7 +90,7 @@ func (f *Files) Shuffle(filename string) {
 	}
 }
 
-// Reverse rows in specific file
+// Reverse rows of a specified text file
 func (f *Files) Reverse(filename string) {
 	for i := len(f.TextFiles[filename].Rows)/2 - 1; i >= 0; i-- {
 		opp := len(f.TextFiles[filename].Rows) - 1 - i
