@@ -26,4 +26,7 @@ if err != nil {
 //  you can use this to know it's finished
 
 fmt.Printf("displaying line from filename: %s\n", txts.Next("filename", false))
+
+// reset pointer
+txts.ResetPointer("filename")
 ```

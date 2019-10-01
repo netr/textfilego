@@ -183,8 +183,11 @@ func (f *Files) getCurrentLine(filename string, roundRobin bool) string {
 		return ""
 	}
 
-	if !roundRobin && f.isTextFileFinished(filename) {
-		return ""
+	if f.isTextFileFinished(filename) {
+		if !roundRobin {
+			return ""
+		}
+		f.ResetPointer(filename)
 	}
 
 	line := f.TextFiles[filename].Rows[f.TextFiles[filename].pointer]
