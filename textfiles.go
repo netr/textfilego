@@ -53,9 +53,6 @@ func (f *Files) Init(path string) error {
 
 // Next gets the current line from the text file
 func (f *Files) Next(filename string, roundRobin bool) string {
-	f.lock.Lock()
-	defer f.lock.Unlock()
-
 	row := f.getCurrentLine(filename, roundRobin)
 	return row
 }
@@ -188,6 +185,7 @@ func (f *Files) getCurrentLine(filename string, roundRobin bool) string {
 			return ""
 		}
 		f.ResetPointer(filename)
+		fmt.Println("txt finishes")
 	}
 
 	line := f.TextFiles[filename].Rows[f.TextFiles[filename].pointer]
@@ -217,6 +215,9 @@ func (f *Files) incrementPointer(filename string, roundRobin bool) {
 }
 
 func (f *Files) storePointer(filename string) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
 	f.ini.Section("files").Key(filename).SetValue(fmt.Sprintf("%v", f.TextFiles[filename].pointer))
 	f.ini.SaveTo(f.path)
 }
