@@ -180,6 +180,10 @@ func (f *Files) getCurrentLine(filename string, roundRobin bool) string {
 		return ""
 	}
 
+	if len(f.TextFiles[filename].Rows) == 0 {
+		return ""
+	}
+
 	if f.isTextFileFinished(filename) {
 		if !roundRobin {
 			return ""
