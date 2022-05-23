@@ -19,7 +19,7 @@ import (
 type Files struct {
 	ini       *ini.File
 	TextFiles map[string]*textFile
-	lock      *sync.Mutex
+	lock      *sync.RWMutex
 	path      string
 }
 
@@ -67,9 +67,6 @@ func (f *Files) Count(filename string) int {
 
 // ResetPointer sets the pointer back to zero for a filename
 func (f *Files) ResetPointer(filename string) {
-	f.lock.Lock()
-	defer f.lock.Unlock()
-
 	if _, ok := f.TextFiles[filename]; !ok {
 		return
 	}
@@ -100,7 +97,7 @@ func (f *Files) Reverse(filename string) {
 ********************************************************/
 
 func (f *Files) initializeLock() {
-	f.lock = &sync.Mutex{}
+	f.lock = &sync.RWMutex{}
 }
 
 func (f *Files) doesIniExist() bool {
@@ -189,12 +186,19 @@ func (f *Files) getCurrentLine(filename string, roundRobin bool) string {
 			return ""
 		}
 		f.ResetPointer(filename)
-		fmt.Println("txt finishes")
 	}
 
-	line := f.TextFiles[filename].Rows[f.TextFiles[filename].pointer]
-	f.incrementPointer(filename, roundRobin)
-	return line
+	if line := f.TextFiles[filename].Rows[f.TextFiles[filename].pointer]; line != "" {
+		f.incrementPointer(filename, roundRobin)
+		return line
+	}
+
+	if !roundRobin {
+		return ""
+	}
+
+	f.ResetPointer(filename)
+	return ""
 }
 
 func (f *Files) newTextFile(filename string) *textFile {
@@ -221,7 +225,6 @@ func (f *Files) incrementPointer(filename string, roundRobin bool) {
 func (f *Files) storePointer(filename string) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
-
 	f.ini.Section("files").Key(filename).SetValue(fmt.Sprintf("%v", f.TextFiles[filename].pointer))
 	f.ini.SaveTo(f.path)
 }
